@@ -21,49 +21,42 @@ from runner.koan import *
 class Proxy:
     def __init__(self, target_object):
         # WRITE CODE HERE
-        self._seen = []
-        self._messages = {}
+        object.__setattr__(self, '_seen', [])
+        object.__setattr__(self, '_messages', {})
         #initialize '_obj' attribute last. Trust me on this!
-        self._obj = target_object
+        object.__setattr__(self,'_obj', target_object)
 
 
     # WRITE CODE HERE
     def __setattr__(self, attr_name, value):
-        if attr_name =='_obj' or attr_name == '_messages' or attr_name=='_seen':
-            object.__setattr__(self, attr_name, value)
-        else:
-            messages = object.__getattribute__(self, '_messages')
-            seen = object.__getattribute__(self, '_seen')
-            target = object.__getattribute__(self, '_obj')
+        messages = object.__getattribute__(self, '_messages')
+        seen = object.__getattribute__(self, '_seen')
+        target = object.__getattribute__(self, '_obj')
 
-            if attr_name in seen:
-                messages[attr_name] +=1
-            else:
-                seen.append(attr_name)
-                messages[attr_name] =1
-            target.__setattr__(attr_name, value)
-
-    def __getattribute__(self, attr_name):
-        if attr_name in object.__getattribute__(self, '__dict__') \
-        or attr_name== 'messages' or attr_name== 'was_called' or attr_name=='number_of_times_called':
-            return object.__getattribute__(self, attr_name)
+        if attr_name in seen:
+            messages[attr_name] +=1
         else:
-            messages = object.__getattribute__(self, '_messages')
-            seen = object.__getattribute__(self, '_seen')
-            target = object.__getattribute__(self, '_obj')
-            
-            if attr_name in seen:
-                messages[attr_name] +=1
-            else:
-                seen.append(attr_name)
-                messages[attr_name] =1
-            return target.__getattribute__(attr_name)
+            seen.append(attr_name)
+            messages[attr_name] =1
+        target.__setattr__(attr_name, value)
+
+    def __getattr__(self, attr_name):
+        messages = object.__getattribute__(self, '_messages')
+        seen = object.__getattribute__(self, '_seen')
+        target = object.__getattribute__(self, '_obj')
+        
+        if attr_name in seen:
+            messages[attr_name] +=1
+        else:
+            seen.append(attr_name)
+            messages[attr_name] =1
+        return target.__getattribute__(attr_name)
 
     def messages(self):
         return self._seen
 
     def was_called(self, attr_name):
-        return attr_name in self._messages
+        return attr_name in self._seen
 
     def number_of_times_called(self, attr_name):
         if attr_name in self._messages:
